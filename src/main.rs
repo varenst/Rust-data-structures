@@ -1,6 +1,4 @@
-use data_structures::add;
-
+use data_structures::linear_data_structures::vec::Vector;
 fn main() {
-    let results = add(2, 3);
-    println!("Results are {}", results)
+   
 }
