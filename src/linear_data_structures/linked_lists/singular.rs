@@ -1,7 +1,5 @@
 use core::fmt;
-use std::
-    fmt::Debug
-;
+use std::fmt::Debug;
 
 struct Node<T> {
     data: T,
@@ -46,7 +44,7 @@ impl<T: Eq> SingularLinkedList<T> {
 
     pub fn insert_after(&mut self, prev_data: T, data: T) -> bool {
         let mut current = self.head.as_mut();
-    
+
         while let Some(node) = current {
             if node.data == prev_data {
                 let new_node = Box::new(Node {
@@ -58,13 +56,13 @@ impl<T: Eq> SingularLinkedList<T> {
             }
             current = node.next.as_mut();
         }
-    
+
         false
     }
-    
+
     pub fn delete(&mut self, data: T) {
         let mut link = &mut self.head;
-    
+
         while let Some(mut boxed_node) = link.take() {
             if boxed_node.data == data {
                 *link = boxed_node.next.take();
@@ -73,7 +71,7 @@ impl<T: Eq> SingularLinkedList<T> {
                 let next = boxed_node.next.take();
                 *link = Some(boxed_node);
                 link = &mut link.as_mut().unwrap().next;
-                *link = next;                        
+                *link = next;
             }
         }
     }
@@ -93,28 +91,34 @@ impl<T: Eq> SingularLinkedList<T> {
     }
 
     pub fn search(&self, data: T) -> bool {
-        let mut current = self.head.as_ref();
-        
-        while let Some(node) = current {
-            if node.data == data {
-                return true;
-            }
-            current = node.next.as_ref();
-        }
+        self.iter().any(|x| *x == data)
+    }    
 
-        false
+    pub fn length(&self) -> usize {
+        self.iter().count()
+    }    
+}
+
+pub struct Iter<'a, T> {
+    next: Option<&'a Node<T>>,
+}
+
+impl<T> SingularLinkedList<T> {
+    pub fn iter(&self) -> Iter<'_, T> {
+        Iter {
+            next: self.head.as_deref(),
+        }
     }
+}
 
-    pub fn length(&self) -> u64 {
-        let mut len: u64 = 0;
-        let mut current = self.head.as_ref();
-    
-        while let Some(node) = current {
-            len += 1;
-            current = node.next.as_ref();
-        }
-    
-        len
+impl<'a, T> Iterator for Iter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.next.map(|node| {
+            self.next = node.next.as_deref(); // advance
+            &node.data
+        })
     }
 }
 
@@ -122,7 +126,7 @@ impl<T: Debug> fmt::Display for SingularLinkedList<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut current = self.head.as_ref();
         let mut debug_list = f.debug_list();
-        
+
         if current.is_none() {
             debug_list.entry(&"Empty");
         } else {
@@ -131,8 +135,8 @@ impl<T: Debug> fmt::Display for SingularLinkedList<T> {
                 current = node.next.as_ref();
             }
         }
-        
-        debug_list.finish()        
+
+        debug_list.finish()
     }
 }
 
@@ -253,5 +257,16 @@ mod tests {
     fn test_display_empty_list() {
         let list: SingularLinkedList<i32> = SingularLinkedList::new();
         assert_eq!(format!("{}", list), "[\"Empty\"]");
+    }
+
+    #[test]
+    fn test_iterator_collect() {
+        let mut list = SingularLinkedList::new();
+        list.insert_at_end(1);
+        list.insert_at_end(2);
+        list.insert_at_end(3);
+
+        let collected: Vec<_> = list.iter().cloned().collect();
+        assert_eq!(collected, vec![1, 2, 3]);
     }
 }
