@@ -7,3 +7,6 @@ edition = "2021"
 name = "data_structures"
 path = "src/lib.rs"
 
+[dependencies]
+winapi = { version = "0.3", features = ["winuser", "windef"] }
+eframe = "0.31.1"
