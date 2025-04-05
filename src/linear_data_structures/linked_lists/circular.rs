@@ -12,11 +12,11 @@ struct Node<T> {
 // Weak and RefCell are used to not create reference cycles
 // I did not expect them to be this different
 
-pub struct DoubleLinkedList<T> {
+pub struct CircularLinkedList<T> {
     head: Option<Rc<RefCell<Node<T>>>>,
 }
 
-impl<T: Eq + Clone> DoubleLinkedList<T> {
+impl<T: Eq + Clone> CircularLinkedList<T> {
     pub fn new() -> Self {
         Self { head: None }
     }
@@ -190,7 +190,7 @@ pub struct Iter<T> {
     next: Option<Rc<RefCell<Node<T>>>>,
 }
 
-impl<T> DoubleLinkedList<T> {
+impl<T> CircularLinkedList<T> {
     pub fn iter(&self) -> Iter<T> {
         Iter {
             next: self.head.clone(),
@@ -211,7 +211,7 @@ impl<T: Clone> Iterator for Iter<T> {
 }
 
 
-impl<T: Debug> fmt::Display for DoubleLinkedList<T> {
+impl<T: Debug> fmt::Display for CircularLinkedList<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut current = self.head.clone();
         let mut debug_list = f.debug_list();
@@ -228,124 +228,4 @@ impl<T: Debug> fmt::Display for DoubleLinkedList<T> {
 
         debug_list.finish()
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn collect_backward<T: Clone>(tail: Rc<RefCell<Node<T>>>) -> Vec<T> {
-        let mut result = vec![];
-        let mut current = Some(tail);
-    
-        while let Some(node_rc) = current {
-            let node = node_rc.borrow();
-            result.push(node.data.clone());
-            current = node.prev.as_ref().and_then(|weak| weak.upgrade());
-        }
-    
-        result.reverse(); // so it matches forward order
-        result
-    }
-
-    #[test]
-    fn test_insert_at_end_with_prev() {
-        let mut list = DoubleLinkedList::new();
-        list.insert_at_end(1);
-        list.insert_at_end(2);
-        list.insert_at_end(3);
-    
-        assert_eq!(format!("{}", list), "[1, 2, 3]");
-    
-        // Traverse to tail
-        let mut tail = list.head.clone().unwrap();
-
-        while let Some(next) = tail.clone().borrow().next.clone() {
-            tail = next;
-        }
-    
-        // Backward traversal should yield [1, 2, 3]
-        let collected = collect_backward(tail);
-        assert_eq!(collected, vec![1, 2, 3]);
-    }
-    
-    #[test]
-    fn test_insert_at_beginning_with_prev() {
-        let mut list = DoubleLinkedList::new();
-        list.insert_at_end(10);
-        list.insert_at_beginning(20);
-        list.insert_at_beginning(30);
-    
-        assert_eq!(format!("{}", list), "[30, 20, 10]");
-    
-        // Traverse to tail
-        let mut tail = list.head.clone().unwrap();
-        while let Some(next) = tail.clone().borrow().next.clone() {
-            tail = next;
-        }
-    
-        let collected = collect_backward(tail);
-        assert_eq!(collected, vec![30, 20, 10]);
-    }
-    
-    #[test]
-    fn test_insert_after_preserves_prev_links() {
-        let mut list = DoubleLinkedList::new();
-        list.insert_at_end(1);
-        list.insert_at_end(2);
-        list.insert_at_end(3);
-        assert!(list.insert_after(2, 99));
-    
-        assert_eq!(format!("{}", list), "[1, 2, 99, 3]");
-    
-        // Traverse to tail
-        let mut tail = list.head.clone().unwrap();
-        while let Some(next) = tail.clone().borrow().next.clone() {
-            tail = next;
-        }
-    
-        let collected = collect_backward(tail);
-        assert_eq!(collected, vec![1, 2, 99, 3]);
-    }
-    
-    #[test]
-    fn test_delete_preserves_prev_links() {
-        let mut list = DoubleLinkedList::new();
-        list.insert_at_end(1);
-        list.insert_at_end(2);
-        list.insert_at_end(3);
-        list.insert_at_end(4);
-        list.delete(3);
-    
-        assert_eq!(format!("{}", list), "[1, 2, 4]");
-    
-        // Traverse to tail
-        let mut tail = list.head.clone().unwrap();
-        while let Some(next) = tail.clone().borrow().next.clone() {
-            tail = next;
-        }
-    
-        let collected = collect_backward(tail);
-        assert_eq!(collected, vec![1, 2, 4]);
-    }
-    
-    #[test]
-    fn test_reverse_preserves_prev_links() {
-        let mut list = DoubleLinkedList::new();
-        list.insert_at_end(1);
-        list.insert_at_end(2);
-        list.insert_at_end(3);
-        list.reverse();
-    
-        assert_eq!(format!("{}", list), "[3, 2, 1]");
-    
-        // Traverse to tail
-        let mut tail = list.head.clone().unwrap();
-        while let Some(next) = tail.clone().borrow().next.clone() {
-            tail = next;
-        }
-    
-        let collected = collect_backward(tail);
-        assert_eq!(collected, vec![3, 2, 1]);
-    }    
 }
