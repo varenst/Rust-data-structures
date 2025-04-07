@@ -1,0 +1,6 @@
+// under the hood really simple to implement
+// vectors already do that really good, if you have them implemented
+// Mainly you have to understand the idea of making an array into a stack
+// Stacks have a lot of ussages
+// as an example your browsers back button, when you enter url it stores it in stack
+// when you exit it pops the highest
