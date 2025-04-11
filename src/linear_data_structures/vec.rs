@@ -96,7 +96,7 @@ impl<T: Debug + Copy + PartialEq> Vector<T> {
         self.size -= 1
     }
 
-    pub  unsafe fn find(&mut self, value: T) -> Option<usize> {
+    pub unsafe fn find(&mut self, value: T) -> Option<usize> {
         for i in 0..self.size {
             if self.get(i) == value {
                 return Some(i);
