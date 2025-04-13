@@ -66,6 +66,7 @@ impl<T: Ord + Clone + fmt::Display> RedBlackTree<T> {
                     {
                         let mut node_mut = node.borrow_mut();
                         new_node.borrow_mut().parent = Some(Rc::downgrade(&node));
+
                         node_mut.left = Some(Rc::clone(&new_node));
                     }
 
@@ -86,6 +87,7 @@ impl<T: Ord + Clone + fmt::Display> RedBlackTree<T> {
                     {
                         let mut node_mut = node.borrow_mut();
                         new_node.borrow_mut().parent = Some(Rc::downgrade(&node));
+                        
                         node_mut.right = Some(Rc::clone(&new_node));
                     }
 
@@ -110,6 +112,7 @@ impl<T: Ord + Clone + fmt::Display> RedBlackTree<T> {
             }
 
             let grand_weak = parent_rc.borrow().parent.clone();
+
             let grand_rc = match grand_weak {
                 None => break,
                 Some(g) => match g.upgrade() {
@@ -419,12 +422,11 @@ impl<T: Ord + Clone + fmt::Display> RedBlackTree<T> {
                     .as_ref()
                     .map_or(false, |right| right.borrow().is_red);
 
-                // Case 2: Both sibling children are black
                 if !sibling_left_red && !sibling_right_red {
                     sibling.borrow_mut().is_red = true;
                     x_opt = parent.borrow().parent.as_ref().and_then(|p| p.upgrade());
                 }
-                // Case 3 & 4
+
                 else {
                     if is_left_child {
                         if !sibling_right_red && sibling_left_red {
